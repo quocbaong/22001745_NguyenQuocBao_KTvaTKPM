@@ -1,0 +1,18 @@
+services:
+  app-a:
+    image: alpine
+    container_name: container-a
+    command: sleep infinity
+    networks:
+      - private-net
+
+  app-b:
+    image: alpine
+    container_name: container-b
+    command: sleep infinity
+    networks:
+      - private-net
+
+networks:
+  private-net:
+    driver: bridge
