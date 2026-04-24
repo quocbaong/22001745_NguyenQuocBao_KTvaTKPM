@@ -1,6 +1,0 @@
-services:
-  react-app:
-    build: .
-    container_name: react-nginx-container
-    ports:
-      - "8084:80"
