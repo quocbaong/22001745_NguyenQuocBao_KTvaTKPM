@@ -1,0 +1,187 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      routes:
+        # User Service Routes
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: user-service-cb
+                fallbackUri: forward:/fallback/user-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 500ms
+                  maxBackoff: 2000ms
+
+        # Food Service Routes
+        - id: food-service
+          uri: ${FOOD_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/foods/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: food-service-cb
+                fallbackUri: forward:/fallback/food-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 500ms
+                  maxBackoff: 2000ms
+
+        # Order Service Routes
+        - id: order-service
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: order-service-cb
+                fallbackUri: forward:/fallback/order-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 500ms
+                  maxBackoff: 2000ms
+
+        # Payment Service Routes
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-service-cb
+                fallbackUri: forward:/fallback/payment-service
+            - name: Retry
+              args:
+                retries: 2
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT
+                backoff:
+                  firstBackoff: 1000ms
+                  maxBackoff: 3000ms
+
+        # Notification Service Routes
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notification-service-cb
+                fallbackUri: forward:/fallback/notification-service
+
+        # Inventory Service Routes
+        - id: inventory-service
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: inventory-service-cb
+                fallbackUri: forward:/fallback/inventory-service
+
+        # Shipping Service Routes
+        - id: shipping-service
+          uri: ${SHIPPING_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/shipping/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: shipping-service-cb
+                fallbackUri: forward:/fallback/shipping-service
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 15s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+    instances:
+      user-service-cb:
+        baseConfig: default
+      food-service-cb:
+        baseConfig: default
+      order-service-cb:
+        baseConfig: default
+      payment-service-cb:
+        baseConfig: default
+        waitDurationInOpenState: 30s
+      notification-service-cb:
+        baseConfig: default
+      inventory-service-cb:
+        baseConfig: default
+      shipping-service-cb:
+        baseConfig: default
+
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+    instances:
+      payment-service-cb:
+        timeoutDuration: 10s
+
+  ratelimiter:
+    instances:
+      api-rate-limiter:
+        limitForPeriod: 50
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    io.github.resilience4j: DEBUG
