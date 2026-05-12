@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-secondary font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-dark to-primary text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2;
+  }
+  
+  .btn-outline {
+    @apply bg-white border-2 border-gray-100 text-secondary font-bold py-3 px-6 rounded-2xl hover:border-secondary hover:bg-background transition-all duration-200 flex items-center justify-center gap-2;
+  }
+
+  .card-premium {
+    @apply bg-white rounded-[2rem] border border-gray-100 shadow-soft hover:shadow-premium transition-all duration-500 overflow-hidden;
+  }
+
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-2xl border-b border-gray-100;
+  }
+
+  .input-field {
+    @apply w-full bg-white border-2 border-gray-100 rounded-2xl px-5 py-4 focus:border-primary focus:ring-0 transition-all outline-none text-secondary font-medium placeholder:text-gray-400;
+  }
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 rounded-full border-4 border-background hover:bg-gray-300 transition-colors;
+}

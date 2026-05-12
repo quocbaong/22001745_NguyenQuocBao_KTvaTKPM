@@ -1,0 +1,59 @@
+server:
+  port: ${SERVER_PORT:8084}
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:h2:mem:paymentdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+services:
+  order-service-url: ${ORDER_SERVICE_URL:http://localhost:8083}
+  notification-service-url: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+  inventory-service-url: ${INVENTORY_SERVICE_URL:http://localhost:8086}
+  shipping-service-url: ${SHIPPING_SERVICE_URL:http://localhost:8087}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      order-service:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15s
+      notification-service:
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  retry:
+    instances:
+      order-service:
+        maxAttempts: 3
+        waitDuration: 1s
+      notification-service:
+        maxAttempts: 2
+        waitDuration: 500ms
+  timelimiter:
+    instances:
+      order-service:
+        timeoutDuration: 5s
+      notification-service:
+        timeoutDuration: 3s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
